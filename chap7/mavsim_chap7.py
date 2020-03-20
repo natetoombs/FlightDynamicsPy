@@ -17,16 +17,9 @@ from chap7.mav_dynamics import mav_dynamics
 from chap7.sensor_viewer import sensor_viewer
 from tools.signals import signals
 
-# initialize the visualization
-VIDEO = False  # True==write video, False==don't write video
 mav_view = mav_viewer()  # initialize the mav viewer
 data_view = data_viewer()  # initialize view of data plots
 sensor_view = sensor_viewer()  # initialize view of sensor data plots
-if VIDEO == True:
-    from chap2.video_writer import video_writer
-    video = video_writer(video_name="chap7_video.avi",
-                         bounding_box=(0, 0, 1000, 1000),
-                         output_rate=SIM.ts_video)
 
 # initialize elements of the architecture
 wind = wind_simulation(SIM.ts_simulation)
@@ -67,16 +60,9 @@ while sim_time < SIM.end_time:
                      estimated_state, # estimated states
                      commanded_state, # commanded states
                      SIM.ts_simulation)
-    if VIDEO == True: video.update(sim_time)
 
     sensor_view.update(mav.update_sensors(),  # sensor values
                        SIM.ts_simulation)
 
     #-------increment time-------------
     sim_time += SIM.ts_simulation
-
-if VIDEO == True: video.close()
-
-
-
-

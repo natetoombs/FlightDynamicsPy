@@ -22,14 +22,14 @@ e_beta_max = np.radians(45)
 # Longitudinal
 wn_theta = np.sqrt(TF.a_theta2 + delta_e_max/e_theta_max*np.abs(TF.a_theta3))
 zeta_theta = 0.4
-W_h = 18
+W_h = 22 #18 before EKF
 wn_h = 1/W_h*wn_theta
 zeta_h = 0.707
 
 # Lateral
 wn_phi = np.sqrt(np.abs(TF.a_phi2)*delta_a_max/e_phi_max)
 zeta_phi = 0.3
-W_chi = 8
+W_chi = 12 #8 before EKF
 wn_chi = 1/W_chi*wn_phi
 zeta_chi = 0.707
 zeta_beta = 0.707

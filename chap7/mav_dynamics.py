@@ -30,7 +30,7 @@ class mav_dynamics:
         self._update_velocity_data()
         # store forces to avoid recalculation in the sensors function
         self._forces = np.array([[0.], [0.], [0.]])
-        self.f_g = 0
+        self.f_g = np.array([0, 0, 0])
         self._Va = MAV.Va0
         self._Vg = self._Va
         self._alpha = 0
