@@ -154,6 +154,9 @@ class ekf_position:
     # implement continous-discrete EKF to estimate pn, pe, Vg, chi
     def __init__(self):
         self.Q = np.eye(7) * 1
+        self.Q[4, 4] = 1
+        self.Q[5, 5] = 1
+        self.Q[6, 6] = 1
         self.R = np.diag([SENSOR.gps_n_sigma**2, SENSOR.gps_e_sigma**2, SENSOR.gps_Vg_sigma**2, SENSOR.gps_course_sigma**2])
         self.R_pseudo = np.diag([0.01, 0.01]) # Covariance for pseudo sensors
         self.N = 5  # number of prediction step per sample
@@ -198,7 +201,7 @@ class ekf_position:
                        g/Vg*np.tan(phi),
                        0,
                        0,
-                       q*np.sin(phi)/np.cos(theta) + r*np.cos(phi)/np.cos(theta)])
+                       psi_dot])
         return _f
 
     def h_gps(self, x, state):
