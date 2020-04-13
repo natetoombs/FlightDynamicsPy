@@ -29,8 +29,8 @@ obsv = observer(SIM.ts_simulation)
 # autopilot commands
 from message_types.msg_autopilot import msg_autopilot
 commands = msg_autopilot()
-Va_command = signals(dc_offset=25.0, amplitude=3.0, start_time=2.0, frequency = 0.01)
-h_command = signals(dc_offset=100.0, amplitude=10.0, start_time=0.0, frequency = 0.02)
+Va_command = signals(dc_offset=25.0, amplitude=3.0, start_time=200.0, frequency = 0.01)
+h_command = signals(dc_offset=100.0, amplitude=10.0, start_time=200.0, frequency = 0.02)
 chi_command = signals(dc_offset=np.radians(180), amplitude=np.radians(45), start_time=5.0, frequency = 0.015)
 
 # initialize the simulation time
@@ -42,7 +42,7 @@ while sim_time < SIM.end_time:
 
     #-------autopilot commands-------------
     commands.airspeed_command = Va_command.square(sim_time)
-    commands.course_command = chi_command.square(sim_time)
+    commands.course_command = 0#chi_command.square(sim_time)
     commands.altitude_command = h_command.square(sim_time)
 
     #-------controller-------------

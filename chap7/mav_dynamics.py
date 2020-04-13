@@ -223,6 +223,10 @@ class mav_dynamics:
         #   The first three elements are the steady state wind in the inertial frame
         #   The second three elements are the gust in the body frame
 
+        # Update Wind
+        self._wind[0] = wind[0]
+        self._wind[1] = wind[1]
+
         Vw_b = Quaternion2Rotation(self._state[6], self._state[7], self._state[8], self._state[9]) @ np.array(
             [wind[0], wind[1], wind[2]]) + np.array([wind[3], wind[4], wind[5]])
 

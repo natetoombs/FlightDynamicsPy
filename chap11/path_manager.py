@@ -41,8 +41,22 @@ class path_manager:
             return self.path
 
     def line_manager(self, waypoints, state):
+        w = waypoints.ned
+        w_idx = 1
+        sm = 1
+
 
     def fillet_manager(self, waypoints, radius, state):
+        w = waypoints.ned
+        w_idx = 1 # Indexed at 0
+        sm = 1
+        q_prev = (w[w_idx] - w[w_idx - 1])/np.linalg.norm(w[w_idx] - w[w_idx - 1])
+        q = (w[w_idx + 1] - w[w_idx])/np.linalg.norm(w[w_idx + 1] - w[w_idx])
+        vartheta = np.arccos(-q_prev.T @ q)
+
+        if sm == 1:
+            flag = 1
+
 
     def dubins_manager(self, waypoints, radius, state):
 

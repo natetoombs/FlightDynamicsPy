@@ -5,6 +5,17 @@ tools that dr. beard didn't upload
 import numpy as np
 import math
 
+def quaternion_multiply(quaternion0, quaternion1):
+    a, b, c, d = quaternion0
+    e, f, g, h = quaternion1
+    return np.array([a*e - b*f - c*g - d*h,
+                        b*e + a*f + c*h - d*g,
+                        a*g - b*h + c*e + d*f,
+                        a*h + b*g - c*f + d*e])
+
+def quaternion_conjugate(q):
+    w, x, y, z = q
+    return (w, -x, -y, -z)
 
 def Euler2Quaternion(phi, theta, psi):
     e0 = math.cos(psi/2)*math.cos(theta/2)*math.cos(phi/2) + math.sin(psi/2)*math.sin(theta/2)*math.sin(phi/2)

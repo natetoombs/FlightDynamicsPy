@@ -12,7 +12,7 @@ import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 import pyqtgraph.Vector as Vector
 
-from tools.rotations import Euler2Rotation
+from tools.tools import Euler2Rotation
 
 class path_viewer():
     def __init__(self):
@@ -50,7 +50,7 @@ class path_viewer():
         """
         mav_position = np.array([[state.pn], [state.pe], [-state.h]])  # NED coordinates
         # attitude of mav as a rotation matrix R from body to inertial
-        R = Euler2Rotation(state.phi, state.theta, state.psi)
+        R = self._Euler2Rotation(state.phi, state.theta, state.psi)
         # rotate and translate points defining mav
         rotated_points = self._rotate_points(self.points, R)
         translated_points = self._translate_points(rotated_points, mav_position)
@@ -105,41 +105,39 @@ class path_viewer():
             Points that define the mav, and the colors of the triangular mesh
             Define the points on the aircraft following diagram in Figure C.3
         """
-        # define MAV body parameters
-        unit_length = 0.25
-        fuse_h = unit_length
-        fuse_w = unit_length
-        fuse_l1 = unit_length * 2
-        fuse_l2 = unit_length
-        fuse_l3 = unit_length * 4
-        wing_l = unit_length
-        wing_w = unit_length * 6
-        tail_h = unit_length
-        tail_l = unit_length
-        tail_w = unit_length * 2
+        # Lengths
+        fuse_h = .75
+        fuse_w = .75
+        fuse_l1 = 2
+        fuse_l2 = 1
+        wing_l = .75
+        wing_w = 4
+        fuse_l3 = 3
+        tailwing_l = .75
+        tailwing_w = 2
+        tail_h = 1.25
 
-        #points are in NED coordinates
-        #   define the points on the aircraft following diagram Fig 2.14
-        points = np.array([[fuse_l1, 0, 0],  # point 1 [0]
-                           [fuse_l2, fuse_w / 2.0, -fuse_h / 2.0],  # point 2 [1]
-                           [fuse_l2, -fuse_w / 2.0, -fuse_h / 2.0],  # point 3 [2]
-                           [fuse_l2, -fuse_w / 2.0, fuse_h / 2.0],  # point 4 [3]
-                           [fuse_l2, fuse_w / 2.0, fuse_h / 2.0],  # point 5 [4]
-                           [-fuse_l3, 0, 0],  # point 6 [5]
-                           [0, wing_w / 2.0, 0],  # point 7 [6]
-                           [-wing_l, wing_w / 2.0, 0],  # point 8 [7]
-                           [-wing_l, -wing_w / 2.0, 0],  # point 9 [8]
-                           [0, -wing_w / 2.0, 0],  # point 10 [9]
-                           [-fuse_l3 + tail_l, tail_w / 2.0, 0], # point 11 [10]
-                           [-fuse_l3, tail_w / 2.0, 0],  # point 12 [11]
-                           [-fuse_l3, -tail_w / 2.0, 0],  # point 13 [12]
-                           [-fuse_l3 + tail_l, -tail_w / 2.0, 0],   # point 14 [13]
-                           [-fuse_l3 + tail_l, 0, 0],  # point 15 [14]
-                           [-fuse_l3, 0, -tail_h],  # point 16 [15]
+        # points are in NED coordinates
+        points = np.array([[fuse_l1, 0, 0],  # point 1
+                           [fuse_l2, fuse_w / 2, -fuse_h / 2],  # point 2
+                           [fuse_l2, -fuse_w / 2, -fuse_h / 2],  # point 3
+                           [fuse_l2, -fuse_w / 2, fuse_h / 2],  # point 4
+                           [fuse_l2, fuse_w / 2, fuse_h / 2],  # point 5
+                           [-fuse_l3, 0, 0],  # point 6
+                           [0, wing_w / 2, 0],  # point 7
+                           [-wing_l, wing_w / 2, 0],  # point 8
+                           [-wing_l, -wing_w / 2, 0],  # point 9
+                           [0, -wing_w / 2, 0],  # point 10
+                           [-fuse_l3 + tailwing_l, tailwing_w / 2, 0],  # point 11
+                           [-fuse_l3, tailwing_w / 2, 0],  # point 12
+                           [-fuse_l3, -tailwing_w / 2, 0],  # point 13
+                           [-fuse_l3 + tailwing_l, -tailwing_w / 2, 0],  # point 14
+                           [-fuse_l3 + tailwing_l, 0, 0],  # point 15
+                           [-fuse_l3, 0, -tail_h]  # point 16
                            ]).T
 
         # scale points for better rendering
-        scale = 50
+        scale = 8
         points = scale * points
 
         #   define the colors for each face of triangular mesh
@@ -148,19 +146,19 @@ class path_viewer():
         blue = np.array([0., 0., 1., 1])
         yellow = np.array([1., 1., 0., 1])
         meshColors = np.empty((13, 3, 4), dtype=np.float32)
-        meshColors[0] = yellow  # nose-top
-        meshColors[1] = yellow  # nose-right
-        meshColors[2] = yellow  # nose-bottom
-        meshColors[3] = yellow  # nose-left
-        meshColors[4] = blue  # fuselage-left
-        meshColors[5] = blue  # fuselage-top
-        meshColors[6] = blue  # fuselage-right
-        meshColors[7] = red  # fuselage-bottom
-        meshColors[8] = green  # wing
-        meshColors[9] = green  # wing
-        meshColors[10] = green  # horizontal tail
-        meshColors[11] = green  # horizontal tail
-        meshColors[12] = blue  # vertical tail
+        meshColors[0] = blue
+        meshColors[1] = yellow
+        meshColors[2] = blue
+        meshColors[3] = blue
+        meshColors[4] = blue
+        meshColors[5] = blue
+        meshColors[6] = blue
+        meshColors[7] = blue
+        meshColors[8] = green
+        meshColors[9] = red
+        meshColors[10] = blue
+        meshColors[11] = blue
+        meshColors[12] = yellow
         return points, meshColors
 
     def _points_to_mesh(self, points):
@@ -170,20 +168,21 @@ class path_viewer():
           (a rectangle requires two triangular mesh faces)
         """
         points=points.T
-        mesh = np.array([[points[0], points[1], points[2]],  # nose-top
-                         [points[0], points[1], points[4]],  # nose-right
-                         [points[0], points[3], points[4]],  # nose-bottom
-                         [points[0], points[3], points[2]],  # nose-left
-                         [points[5], points[2], points[3]],  # fuselage-left
-                         [points[5], points[1], points[2]],  # fuselage-top
-                         [points[5], points[1], points[4]],  # fuselage-right
-                         [points[5], points[3], points[4]],  # fuselage-bottom
-                         [points[6], points[7], points[9]],  # wing
-                         [points[7], points[8], points[9]],  # wing
-                         [points[10], points[11], points[12]],  # horizontal tail
-                         [points[10], points[12], points[13]],  # horizontal tail
-                         [points[5], points[14], points[15]],  # vertical tail
-                        ])
+        mesh_indices = np.array([ [4, 1, 5], # 1, bottom-front
+                                  [1, 2, 3], # 2, top-front
+                                  [1, 2, 5], # 3, left-front
+                                  [1, 4, 3], # 4, right-front
+                                  [2, 3, 6], # 5, top-body
+                                  [3, 4, 6], # 6, right-body
+                                  [4, 5, 6], # 7, bottom-body
+                                  [2, 5, 6], # 8, left-body
+                                  [7, 8, 10], # 9, left-wing
+                                  [8, 9, 10], # 10, right-wing
+                                  [11, 12, 14], # 11, left-tail
+                                  [12, 13, 14], # 12, right-tail
+                                  [6, 15, 16] # 13, rudder
+                                  ])
+        mesh = np.array([points[index - 1] for triangle in mesh_indices for index in triangle])
         return mesh
 
     def straight_line_plot(self, path):
@@ -230,3 +229,26 @@ class path_viewer():
                                    mode='line_strip')
         return object
 
+    def _Euler2Rotation(self, phi, theta, psi):
+        """
+        Converts euler angles to rotation matrix (R_b^i, i.e., body to inertial)
+        """
+        # only call sin and cos once for each angle to speed up rendering
+        c_phi = np.cos(phi)
+        s_phi = np.sin(phi)
+        c_theta = np.cos(theta)
+        s_theta = np.sin(theta)
+        c_psi = np.cos(psi)
+        s_psi = np.sin(psi)
+
+        R_roll = np.array([[1, 0, 0],
+                           [0, c_phi, s_phi],
+                           [0, -s_phi, c_phi]])
+        R_pitch = np.array([[c_theta, 0, -s_theta],
+                            [0, 1, 0],
+                            [s_theta, 0, c_theta]])
+        R_yaw = np.array([[c_psi, s_psi, 0],
+                          [-s_psi, c_psi, 0],
+                          [0, 0, 1]])
+        R = R_roll @ R_pitch @ R_yaw  # inertial to body (Equation 2.4 in book)
+        return R.T  # transpose to return body to inertial

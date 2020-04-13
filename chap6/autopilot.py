@@ -46,7 +46,7 @@ class autopilot:
                         kp=AP.altitude_kp,
                         ki=AP.altitude_ki,
                         Ts=ts_control,
-                        limit=np.radians(30))
+                        limit=np.radians(50)) #30
         self.airspeed_from_throttle = pid_control( #pi_control(
                         kp=AP.airspeed_throttle_kp,
                         ki=AP.airspeed_throttle_ki,

@@ -45,6 +45,7 @@ while sim_time < SIM.end_time:
     commands.course_command = chi_command.square(sim_time)
     commands.altitude_command = h_command.square(sim_time)
     delta, commanded_state = ctrl.update(commands, estimated_state)
+    print(delta[1])
 
     #-------physical system-------------
     current_wind = wind.update()  # get the new wind vector

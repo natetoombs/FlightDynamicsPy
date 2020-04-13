@@ -30,3 +30,8 @@ class msg_state:
         self.bx = 0.      # gyro bias along roll axis in radians/sec
         self.by = 0.      # gyro bias along pitch axis in radians/sec
         self.bz = 0.      # gyro bias along yaw axis in radians/sec
+        self.e0 = 0.
+        self.e1 = 0.
+        self.e2 = 0.
+        self.e3 = 1.
+        self.Vs = 0.
