@@ -1,8 +1,8 @@
 """
-mavsim_python
-    - Chapter 6 assignment for Beard & McLain, PUP, 2012
-    - Last Update:
-        2/5/2019 - RWB
+final_sim
+    - Implementation of Quaternion-based Autopilot
+    - Uncomment the desired control here, in
+    - quatopilot.py, and in quat_parameters.py
 """
 import sys
 sys.path.append('..')
@@ -26,28 +26,34 @@ wind = wind_simulation(SIM.ts_simulation)
 mav = mav_dynamics(SIM.ts_simulation)
 ctrl = quatopilot(SIM.ts_simulation)
 
-# autopilot commands -- Straight and Level
-commands = msg_quatopilot()
-commands.p_ref = np.array([0, 0, -100])
-rpy = np.array([0, 90, 0])
-commands.q_ref = Euler2Quaternion(np.radians(rpy[0]), np.radians(rpy[1]), np.radians(rpy[2]))
-commands.u_ref = 0
-
-# # autopilot commands -- Off Axis
+# # autopilot commands -- Hover (In development)
 # commands = msg_quatopilot()
-# commands.p_ref = np.array([10, 0, -100])
-# rpy = np.array([50, 15, -10])
+# commands.p_ref = np.array([0, 0, -100])
+# rpy = np.array([0, 90, 0])
 # commands.q_ref = Euler2Quaternion(np.radians(rpy[0]), np.radians(rpy[1]), np.radians(rpy[2]))
-# commands.u_ref = 20
+# commands.u_ref = 0
 
-# autopilot commands Straight and Level
+# autopilot commands -- Off Axis
 commands = msg_quatopilot()
 commands.p_ref = np.array([10, 0, -100])
-rpy = np.array([0, 30, 0])
+rpy = np.array([15, 10, -10])
 commands.q_ref = Euler2Quaternion(np.radians(rpy[0]), np.radians(rpy[1]), np.radians(rpy[2]))
 commands.u_ref = 20
 
-print(commands.q_ref)
+# # autopilot commands -- Straight and Level
+# commands = msg_quatopilot()
+# commands.p_ref = np.array([10, 0, -100])
+# rpy = np.array([0, 30, 0])
+# commands.q_ref = Euler2Quaternion(np.radians(rpy[0]), np.radians(rpy[1]), np.radians(rpy[2]))
+# commands.u_ref = 20
+
+# # autopilot commands -- Straight-Up
+# commands = msg_quatopilot()
+# commands.p_ref = np.array([40, 0, -110])
+# rpy = np.array([0, 85, 0])
+# commands.q_ref = Euler2Quaternion(np.radians(rpy[0]), np.radians(rpy[1]), np.radians(rpy[2]))
+# commands.u_ref = 15
+
 # initialize the simulation time
 sim_time = SIM.start_time
 
@@ -66,7 +72,7 @@ while sim_time < SIM.end_time:
     #-------controller-------------
     estimated_state = mav.msg_true_state  # uses true states in the control
     delta = ctrl.update(commands, estimated_state)
-    print(delta)
+
     #-------physical system-------------
     current_wind = wind.update()  # get the new wind vector
     mav.update_state(delta, current_wind)  # propagate the MAV dynamics

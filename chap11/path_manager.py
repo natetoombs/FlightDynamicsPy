@@ -21,6 +21,8 @@ class path_manager:
         self.manager_state = 1
         # dubins path parameters
         self.dubins_path = dubins_parameters()
+        self.new_waypoint_path = True
+        self.flag_path_changed = False
 
     def update(self, waypoints, radius, state):
         def update(self, waypoints, radius, state):
@@ -42,27 +44,71 @@ class path_manager:
 
     def line_manager(self, waypoints, state):
         w = waypoints.ned
-        w_idx = 1
-        sm = 1
+        w_idx = 1 # Indexed at 0
+        sm = 1 #state machine
 
 
     def fillet_manager(self, waypoints, radius, state):
         w = waypoints.ned
-        w_idx = 1 # Indexed at 0
-        sm = 1
-        q_prev = (w[w_idx] - w[w_idx - 1])/np.linalg.norm(w[w_idx] - w[w_idx - 1])
-        q = (w[w_idx + 1] - w[w_idx])/np.linalg.norm(w[w_idx + 1] - w[w_idx])
+        p = np.array([state.pn, state.pe, -state.h])
+        N = waypoints.num_waypoints
+
+        assert (N >= 3), "Need more waypoints!"
+
+        if self.new_waypoint_path:
+            self.initialize_pointers()
+
+        i = self.ptr_current
+        self.manager_state = 1
+
+        q_prev = (w[i] - w[i - 1])/np.linalg.norm(w[i] - w[i - 1])
+        q = (w[i + 1] - w[i])/np.linalg.norm(w[i + 1] - w[i])
         vartheta = np.arccos(-q_prev.T @ q)
 
-        if sm == 1:
+        if self.manager_state == 1:
             flag = 1
+            r = w[i-1] #TODO: Check this (w[i])
+            q = q_prev
+            z = w[i] - (radius/np.tan(vartheta/2))*q_prev
 
+            self.halfspace_r = np.array([z])
+            self.halfspace_n = np.array([q_prev])
+
+            # Check if in half space &
+            # Tell waypoint viewer to replot the path
+            if self.flag_path_changed:
+                self.path.flag_path_changed = True
+                self.flag_path_changed = False
+            if self.inHalfSpace(p):
+                self.manager_state = 2
+                self.flag_path_changed = True
+        elif self.manager_state == 2:
+            flag = 2
+            c = w[i] + (radius/np.sin(vartheta/2))*(q_prev-q)/np.linalg.norm(q_prev-q)
+            rho = radius
+            lam = np.sign(q_prev[0]*q[1] - q_prev[1]*q[0])
+            z = w[i] + (radius/np.tan(vartheta/2))*q
+            if self.inHalfSpace(p):
+                self.increment_pointers(waypoints.num_waypoints)
+                self.manager_state = 1
+                self.flag_path_changed = True
 
     def dubins_manager(self, waypoints, radius, state):
 
     def initialize_pointers(self):
+        self.ptr_previous = 0
+        self.ptr_current = 1
+        self.ptr_next = 2
 
-    def increment_pointers(self):
+        self.new_waypoint_path = False
+
+    def increment_pointers(self, num_waypoints):
+        self.ptr_previous = self.ptr_current
+        self.ptr_current = self.ptr_next
+        self.ptr_next = self.ptr_next + 1
+
+        if self.ptr_next == num_waypoints:
+            self.ptr_next = 0
 
     def inHalfSpace(self, pos):
         if (pos-self.halfspace_r).T @ self.halfspace_n >= 0:

@@ -1,11 +1,7 @@
 """
-msg_autopilot
-    - messages type for input to the autopilot
+msg_quatopilot
+    - messages type for input to the quatopilot
     
-part of mavsim_python
-    - Beard & McLain, PUP, 2012
-    - Last update:
-        2/5/2019 - RWB
 """
 import numpy as np
 

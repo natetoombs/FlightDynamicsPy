@@ -1,6 +1,6 @@
 """
-
-
+ Quaternion-based Autopilot
+    Nathan Toombs, 2020
 """
 import sys
 import numpy as np
@@ -23,6 +23,10 @@ class quatopilot: #TODO: max deflections
         self.t_pid = pid_helper()
         self.hover_flag = False
         self.hover_pose = 0
+        self.hover_pose_set = False
+        self.L = 0
+        self.M = 0
+        self.N = 0
 
     def update(self, cmd, state): #need thrust or Vs,
 
@@ -30,7 +34,7 @@ class quatopilot: #TODO: max deflections
         q_ref = cmd.q_ref
         u_ref = cmd.u_ref
 
-        ################# Straight Flight #################
+        ############# Straight & Off-Axis Flight #############
         psi_ref = np.arctan2(p_ref[1], p_ref[0])
         psi_array = np.array([np.cos(psi_ref), np.sin(psi_ref)])
         p_xy = np.array([state.pn, state.pe])
@@ -39,14 +43,24 @@ class quatopilot: #TODO: max deflections
         p_ref = np.array([p_refxy[0], p_refxy[1], p_ref[2]])
         ###################################################
 
-        ##################### Hovering ####################
-        if state.theta > np.radians(85):
-            self.hover_flag = True
-        if self.hover_flag:
-            if self.hover_pose == 0:
-                self.hover_pose = np.array([state.pn, state.pe, -state.h])
-            p_ref = self.hover_pose
-        ###################################################
+        # ################# Straight-up Flight ################
+        # psi_ref = np.arctan2(p_ref[1], -p_ref[2])
+        # psi_array = np.array([np.cos(psi_ref), np.sin(psi_ref)])
+        # p_zy = np.array([-state.h, state.pe])
+        # p_refzy = np.dot(p_zy, psi_array)*psi_array # eq (36)
+        #
+        # p_ref = np.array([p_ref[0], p_refzy[1], p_refzy[0]])
+        # ###################################################
+
+        # ########## Hovering (In development) ###############
+        # if state.theta > np.radians(85):
+        #     self.hover_flag = True
+        # if self.hover_flag:
+        #     if not self.hover_pose_set:
+        #         self.hover_pose = np.array([state.pn, state.pe, -state.h])
+        #         self.hover_pose_set = True
+        #     p_ref = self.hover_pose
+        # ###################################################
 
         q_des = self.position_controller(p_ref, q_ref, state)
         delta_a, delta_e, delta_r = self.attitude_controller(q_des, state)
@@ -136,7 +150,9 @@ class quatopilot: #TODO: max deflections
         L = (qp.k_ap * Ex + qp.k_ad * Ex_dot) * mav.Jx  # Desired moment about x, eq (11)
         M = (qp.k_ap * Ey + qp.k_ad * Ey_dot) * mav.Jy  # Desired moment about y, eq (12)
         N = (qp.k_ap * Ez + qp.k_ad * Ez_dot) * mav.Jz  # Desired moment about z, eq (13)
-
+        self.L = L
+        self.M = M
+        self.N = N
         delta_a = L / (
                     1 / 2 * mav.rho * Vs ** 2 * mav.S_wing * mav.b * mav.C_ell_delta_a)  # Calculation for delta_a, eq (17)
         delta_e = M / (
@@ -175,18 +191,29 @@ class quatopilot: #TODO: max deflections
                 1 + np.exp(mav.M * (alpha + mav.alpha0))))
 
         C_L = (1 - sigma) * (mav.C_L_0 + mav.C_L_alpha * alpha) + sigma * (
-                2 * np.sign(alpha) * np.sin(alpha) ** 2 * np.cos(alpha))
-        C_D = mav.C_D_p + (mav.C_L_0 + mav.C_L_alpha * alpha) ** 2 / (np.pi * mav.e * mav.AR)
+                2 * np.sign(alpha) * np.sin(alpha) ** 2 * np.cos(alpha)) # UAV Book eq. 4.9
+        C_D = mav.C_D_p + (mav.C_L_0 + mav.C_L_alpha * alpha) ** 2 / (np.pi * mav.e * mav.AR) # UAV Book eq. 4.11
 
-        L = C_L
-        D = C_D  # TODO get this
+        L = 1/2*mav.rho*u**2*mav.S_wing*C_L
+        D = 1/2*mav.rho*u**2*mav.S_wing*C_D
 
         T = D * np.cos(theta) + mav.mass * mav.gravity * np.sin(theta) - L * np.sin(theta) + mav.mass * u_dot
+        if T < 0:
+            T = 0
         # TODO: Add equations 32, 33 for slipstream
 
+        # Vs_d_e = np.sqrt(self.M /(.5*mav.rho*mav.S_wing*mav.c*mav.C_m_delta_e*np.radians(45)))
+        # Vs_d_a = np.sqrt(self.L / (.5 * mav.rho * mav.S_wing * mav.b * mav.C_ell_delta_a * np.radians(45)))
+        # Vs_d_r = np.sqrt(self.N / (.5 * mav.rho * mav.S_wing * mav.b * mav.C_n_delta_r * np.radians(45)))
+        # Vs_d = max(Vs_d_e, Vs_d_a, Vs_d_r)
+        # T_slip = mav.rho*np.pi/4*mav.D_prop**2/2*(Vs_d**2 - state.Va**2) # eq 33
+        # T_slip = max(T_slip, 20)
+        # if Vs_d > state.Va:
+        #     T = T + T_slip
+        # print(T)
         delta_t = T / 54  # Using terrible linear model TODO: Make a better one
-        if delta_t > 1:
-            delta_t = 1*np.sign(delta_t)
+        if delta_t > 6:
+            delta_t = 6*np.sign(delta_t) # Limit the throttle voltage to 6 times the max (arbitrary)
         elif delta_t < 1:
             delta_t = 0
 

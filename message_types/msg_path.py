@@ -25,3 +25,5 @@ class msg_path:
         self.orbit_radius = 50
         # orbit direction: 'CW'==clockwise, 'CCW'==counter clockwise
         self.orbit_direction = 'CW'
+        # path has changed
+        self.flag_path_changed = True

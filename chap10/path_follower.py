@@ -7,9 +7,9 @@ from message_types.msg_autopilot import msg_autopilot
 
 class path_follower:
     def __init__(self):
-        self.chi_inf = np.radians(60) # approach angle for large distance from straight-line path
+        self.chi_inf = np.radians(70) # approach angle for large distance from straight-line path
         self.k_path = 0.01 # proportional gain for straight-line path following
-        self.k_orbit = 0.4 # proportional gain for orbit following
+        self.k_orbit = 0.65 # proportional gain for orbit following
         self.gravity = 9.8
         self.autopilot_commands = msg_autopilot()  # message sent to autopilot
 
